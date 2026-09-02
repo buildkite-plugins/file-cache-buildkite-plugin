@@ -1,0 +1,19 @@
+steps:
+  - label: ":shell: Tests"
+    plugins:
+      - plugin-tester#v1.3.0: ~
+
+  - label: ":shell: Shellcheck"
+    plugins:
+      - shellcheck#v1.4.0:
+          files:
+            - hooks/**
+            - lib/**
+            - tests/**
+          # BATS tests run in subshells; tildes are literal cache path syntax.
+          options: "-x -e SC2030,SC2031,SC2088"
+
+  - label: ":sparkles: Plugin lint"
+    plugins:
+      - plugin-linter#v3.3.0:
+          id: buildkite-plugins/file-cache

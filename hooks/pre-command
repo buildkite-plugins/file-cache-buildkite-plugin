@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=lib/file-cache.bash
+. "${HOOK_DIR}/../lib/file-cache.bash"
+
+CACHE_PATH="$(file_cache_path)"
+file_cache_export_generation
+
+CONFIG_FILE="$(file_cache_create_config)"
+cleanup() {
+  rm -f "$CONFIG_FILE"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+printf '%s\n' '--- :package: Restoring file cache'
+printf 'Path: %s\n' "$CACHE_PATH"
+
+buildkite-agent cache restore \
+  --name "$FILE_CACHE_CACHE_NAME" \
+  --cache-config-file "$CONFIG_FILE"

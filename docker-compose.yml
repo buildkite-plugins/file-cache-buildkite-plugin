@@ -1,0 +1,30 @@
+services:
+  tests:
+    image: buildkite/plugin-tester:v4.1.1
+    working_dir: /plugin
+    volumes:
+      - .:/plugin
+
+  lint:
+    image: buildkite/plugin-linter:latest
+    command:
+      - --id
+      - buildkite-plugins/file-cache
+    volumes:
+      - .:/plugin:ro
+
+  shellcheck:
+    image: koalaman/shellcheck-alpine:v0.10.0
+    command:
+      - shellcheck
+      - --external-sources
+      - --exclude=SC2030,SC2031,SC2088
+      - hooks/pre-command
+      - hooks/post-command
+      - lib/file-cache.bash
+      - tests/config.bats
+      - tests/pre-command.bats
+      - tests/post-command.bats
+    working_dir: /plugin
+    volumes:
+      - .:/plugin:ro
