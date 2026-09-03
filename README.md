@@ -44,6 +44,7 @@ caches:
       - agent: pipeline
       - agent: branch
       - agent: os
+      - "~/.npm"
       - agent: arch
         fallback_limit: true
       - env: BUILDKITE_PLUGIN_FILE_CACHE_GENERATION

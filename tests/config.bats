@@ -28,10 +28,15 @@ teardown() {
   assert_line '      - agent: pipeline'
   assert_line '      - agent: branch'
   assert_line '      - agent: os'
+  assert_line "      - '~/.npm'"
   assert_line '      - agent: arch'
   assert_line '        fallback_limit: true'
   assert_line '      - env: BUILDKITE_PLUGIN_FILE_CACHE_GENERATION'
-  assert_line "      - '~/.npm'"
+
+  run grep -Fxc "      - '~/.npm'" "$CONFIG_FILE"
+
+  assert_success
+  assert_output "2"
 }
 
 @test "quotes apostrophes in paths for YAML" {

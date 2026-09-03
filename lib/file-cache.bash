@@ -88,6 +88,7 @@ file_cache_create_config() {
       '      - agent: pipeline' \
       '      - agent: branch' \
       '      - agent: os' \
+      "      - ${quoted_path}" \
       '      - agent: arch' \
       '        fallback_limit: true' \
       "      - env: ${FILE_CACHE_GENERATION_ENV}" \
