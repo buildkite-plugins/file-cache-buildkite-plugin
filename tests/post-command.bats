@@ -21,6 +21,21 @@ setup() {
   unstub buildkite-agent
 }
 
+@test "saves to the configured cache store" {
+  export BUILDKITE_COMPUTE_TYPE="self-hosted"
+  export BUILDKITE_PLUGIN_FILE_CACHE_STORE="s3://build-cache/buildkite?region=ap-southeast-2"
+  mkdir -p "$BUILDKITE_PLUGIN_FILE_CACHE_PATH"
+  stub buildkite-agent \
+    "cache save --path $BUILDKITE_PLUGIN_FILE_CACHE_PATH --cache-store-url $BUILDKITE_PLUGIN_FILE_CACHE_STORE : echo saved"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "saved"
+
+  unstub buildkite-agent
+}
+
 @test "skips saving after a failed command" {
   export BUILDKITE_COMMAND_EXIT_STATUS="7"
 

@@ -15,6 +15,54 @@ setup() {
   assert_output "~/.npm"
 }
 
+@test "returns the configured cache store" {
+  export BUILDKITE_PLUGIN_FILE_CACHE_STORE="s3://build-cache/buildkite?region=ap-southeast-2"
+
+  run file_cache_store_url
+
+  assert_success
+  assert_output "$BUILDKITE_PLUGIN_FILE_CACHE_STORE"
+}
+
+@test "uses the agent cache store when the plugin store is not configured" {
+  export BUILDKITE_COMPUTE_TYPE="self-hosted"
+  export BUILDKITE_AGENT_CACHE_STORE_URL="s3://build-cache/buildkite?region=ap-southeast-2"
+
+  run file_cache_store_url
+
+  assert_success
+  assert_output ""
+}
+
+@test "requires a cache store on self-hosted agents" {
+  export BUILDKITE_COMPUTE_TYPE="self-hosted"
+  unset BUILDKITE_AGENT_CACHE_STORE_URL
+
+  run file_cache_store_url
+
+  assert_failure
+  assert_output --partial "set the plugin store option or BUILDKITE_AGENT_CACHE_STORE_URL"
+}
+
+@test "rejects a custom cache store on hosted agents" {
+  export BUILDKITE_COMPUTE_TYPE="hosted"
+  export BUILDKITE_PLUGIN_FILE_CACHE_STORE="s3://build-cache/buildkite"
+
+  run file_cache_store_url
+
+  assert_failure
+  assert_output --partial "only supported on self-hosted agents"
+}
+
+@test "rejects cache stores containing newlines" {
+  export BUILDKITE_PLUGIN_FILE_CACHE_STORE=$'s3://build-cache/buildkite\nother'
+
+  run file_cache_store_url
+
+  assert_failure
+  assert_output --partial "must not contain newlines"
+}
+
 @test "rejects protected paths" {
   export BUILDKITE_PLUGIN_FILE_CACHE_PATH="/"
 

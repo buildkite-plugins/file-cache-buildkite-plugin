@@ -7,9 +7,14 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "${HOOK_DIR}/../lib/file-cache.bash"
 
 CACHE_PATH="$(file_cache_path)"
+CACHE_STORE_URL="$(file_cache_store_url)"
+CACHE_ARGS=(--path "$CACHE_PATH")
+
+if [[ -n "$CACHE_STORE_URL" ]]; then
+  CACHE_ARGS+=(--cache-store-url "$CACHE_STORE_URL")
+fi
 
 printf '%s\n' '--- :package: Restoring file cache'
 printf 'Path: %s\n' "$CACHE_PATH"
 
-buildkite-agent cache restore \
-  --path "$CACHE_PATH"
+buildkite-agent cache restore "${CACHE_ARGS[@]}"

@@ -56,6 +56,31 @@ file_cache_path() {
   printf '%s\n' "$path"
 }
 
+file_cache_store_url() {
+  local store="${BUILDKITE_PLUGIN_FILE_CACHE_STORE:-}"
+
+  if [[ -n "$store" ]]; then
+    if [[ "${BUILDKITE_COMPUTE_TYPE:-}" == "hosted" ]]; then
+      file_cache_error "The file-cache store option is only supported on self-hosted agents; omit it to use the Buildkite hosted cache store"
+      return 1
+    fi
+
+    if [[ "$store" == *$'\n'* || "$store" == *$'\r'* ]]; then
+      file_cache_error "The file-cache store must not contain newlines"
+      return 1
+    fi
+
+    printf '%s\n' "$store"
+    return 0
+  fi
+
+  if [[ "${BUILDKITE_COMPUTE_TYPE:-}" == "self-hosted" &&
+    -z "${BUILDKITE_AGENT_CACHE_STORE_URL:-}" ]]; then
+    file_cache_error "Self-hosted agents require an S3 cache store; set the plugin store option or BUILDKITE_AGENT_CACHE_STORE_URL"
+    return 1
+  fi
+}
+
 file_cache_resolve_path() {
   local path
 
