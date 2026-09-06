@@ -20,7 +20,7 @@ The plugin restores the path before the command and saves it after a successful 
 ## Requirements
 
 - Buildkite Cache must be enabled for the organization.
-- Buildkite agent 3.136.3 or later.
+- A Buildkite agent version that supports `buildkite-agent cache save/restore --path`.
 - Bash and `buildkite-agent` must be available in the job environment.
 - The initial supported environment is a POSIX Buildkite hosted agent. Self-hosted agents still need a configured cache store.
 
@@ -34,25 +34,31 @@ The filesystem root, current working directory, and entire home directory are re
 
 ## Default behaviour
 
-The plugin creates a temporary cache definition equivalent to:
+The plugin calls the agent directly:
+
+```shell
+buildkite-agent cache restore --path "~/.npm"
+buildkite-agent cache save --path "~/.npm"
+```
+
+The agent owns an in-memory cache definition equivalent to:
 
 ```yaml
 caches:
-  - name: "file_cache"
+  - name: "path_cache"
     cache_key:
-      - "file-cache-v1"
-      - agent: pipeline
-      - agent: branch
+      - "path-cache-v1"
       - agent: os
-      - "~/.npm"
       - agent: arch
         fallback_limit: true
-      - env: BUILDKITE_PLUGIN_FILE_CACHE_GENERATION
+      - "<checked-out commit>"
     target_paths:
       - "~/.npm"
 ```
 
-The generation is the checked-out commit. Restore checks the exact commit first and then the newest compatible entry for the same pipeline, branch, operating system, architecture, and target path.
+Restore checks the exact commit first and then the newest entry for the same operating system, architecture, and target path. The target path is already part of the cache address, so it is not duplicated in the key. Pipeline and branch sharing are governed by the cache registry policy.
+
+Each plugin invocation operates on one path. Different paths address different caches even though the internal cache name is the same; configuring the same path twice intentionally addresses the same cache.
 
 - A normal cache miss does not fail the job.
 - A restore error fails before the command runs.
@@ -73,7 +79,7 @@ Avoid secrets, credentials, required build artifacts, and broad directories whos
 
 ## Security and isolation
 
-The generated key includes the pipeline and branch to avoid accidental sharing in the prototype. Cache keys are not an authorization boundary. Before using the plugin with untrusted builds, configure the cache registry policy to prevent untrusted jobs from reading or replacing trusted cache entries.
+The default cache registry policy permits sharing across pipelines and branches in the cluster. Cache keys are not an authorization boundary. Before using the plugin with untrusted builds, configure the cache registry policy to prevent untrusted jobs from reading or replacing trusted cache entries.
 
 ## Cache volumes are different
 

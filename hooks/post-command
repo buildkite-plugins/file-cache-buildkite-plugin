@@ -20,22 +20,10 @@ if [[ ! -e "$RESOLVED_CACHE_PATH" && ! -L "$RESOLVED_CACHE_PATH" ]]; then
   exit 0
 fi
 
-file_cache_export_generation
-
-CONFIG_FILE="$(file_cache_create_config)"
-cleanup() {
-  rm -f "$CONFIG_FILE"
-}
-trap cleanup EXIT
-trap 'exit 129' HUP
-trap 'exit 130' INT
-trap 'exit 143' TERM
-
 printf '%s\n' '--- :package: Saving file cache'
 printf 'Path: %s\n' "$CACHE_PATH"
 
 if ! buildkite-agent cache save \
-  --name "$FILE_CACHE_CACHE_NAME" \
-  --cache-config-file "$CONFIG_FILE"; then
+  --path "$CACHE_PATH"; then
   file_cache_warning "Failed to save the file cache; continuing because the command succeeded"
 fi
