@@ -2,7 +2,7 @@
 
 Automatically restore and save one path with [Buildkite Cache](https://buildkite.com/docs/pipelines/configure/cache).
 
-This plugin is an early path-first prototype. It supplies rolling, platform-aware cache defaults so a pipeline author only needs to choose the folder to cache. Buildkite hosted agents provide storage automatically; self-hosted agents can use an Amazon S3 or S3-compatible store.
+This plugin wraps the agent's path-based cache commands so a pipeline author only needs to choose the folder to cache. The agent supplies the default cache configuration. Buildkite hosted agents provide storage automatically; self-hosted agents can use an Amazon S3 or S3-compatible store.
 
 ## Example
 
@@ -120,40 +120,6 @@ For an S3-compatible service, add its endpoint and path-style setting to the sto
 store: "s3://build-cache/buildkite?region=us-east-1&endpoint=https://minio.example.com&use_path_style=true"
 ```
 
-## Default behaviour
-
-The plugin calls the agent directly:
-
-```shell
-buildkite-agent cache restore --path "~/.npm"
-buildkite-agent cache save --path "~/.npm"
-```
-
-The agent owns an in-memory cache definition equivalent to:
-
-```yaml
-caches:
-  - name: "path_cache"
-    cache_key:
-      - "path-cache-v1"
-      - agent: os
-      - agent: arch
-        fallback_limit: true
-      - "<checked-out commit>"
-    target_paths:
-      - "~/.npm"
-```
-
-Restore checks the exact commit first and then the newest entry for the same operating system, architecture, and target path. The target path is already part of the cache address, so it is not duplicated in the key. Pipeline and branch sharing are governed by the cache registry policy.
-
-Each plugin invocation operates on one path. Different paths address different caches even though the internal cache name is the same; configuring the same path twice intentionally addresses the same cache.
-
-- A normal cache miss does not fail the job.
-- A restore error fails before the command runs.
-- A failed command is never saved.
-- A missing path at save time produces a warning and is skipped.
-- A save error produces a warning but does not change a successful command into a failed job.
-
 ## Choosing a path
 
 Use this plugin for data that is safe to regenerate, particularly package-manager download caches and compiler caches:
@@ -175,7 +141,7 @@ The hosted-agent `cache:` pipeline attribute configures an attached best-effort 
 
 ## Container limitation
 
-The hooks run on the agent host. A path used only inside a Docker container must also be visible at the same host path. Direct restoration into a bind-mount root is not supported by the prototype.
+The hooks run on the agent host. A path used only inside a Docker container must also be visible at the same host path. Direct restoration into a bind-mount root is not supported by the plugin.
 
 ## Developing
 
