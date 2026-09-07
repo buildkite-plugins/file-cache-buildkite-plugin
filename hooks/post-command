@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${BUILDKITE_COMMAND_EXIT_STATUS:-0}" != "0" ]]; then
+  printf 'Skipping file cache save because the command exited with status %s\n' \
+    "$BUILDKITE_COMMAND_EXIT_STATUS"
+  exit 0
+fi
+
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=lib/file-cache.bash
+. "${HOOK_DIR}/../lib/file-cache.bash"
+
+CACHE_PATH="$(file_cache_path)"
+CACHE_STORE_URL="$(file_cache_store_url)"
+RESOLVED_CACHE_PATH="$(file_cache_resolve_path)"
+CACHE_ARGS=(--path "$CACHE_PATH")
+
+if [[ -n "$CACHE_STORE_URL" ]]; then
+  CACHE_ARGS+=(--cache-store-url "$CACHE_STORE_URL")
+fi
+
+if [[ ! -e "$RESOLVED_CACHE_PATH" && ! -L "$RESOLVED_CACHE_PATH" ]]; then
+  file_cache_warning "File cache path does not exist; skipping save: ${CACHE_PATH}"
+  exit 0
+fi
+
+printf '%s\n' '--- :package: Saving file cache'
+printf 'Path: %s\n' "$CACHE_PATH"
+
+if ! buildkite-agent cache save "${CACHE_ARGS[@]}"; then
+  file_cache_warning "Failed to save the file cache; continuing because the command succeeded"
+fi

@@ -1,0 +1,17 @@
+name: File Cache
+description: Automatically restore and save a Buildkite Cache entry for a path
+author: https://github.com/buildkite-plugins
+requirements:
+  - bash
+  - buildkite-agent
+configuration:
+  properties:
+    path:
+      type: string
+      minLength: 1
+    store:
+      type: string
+      minLength: 1
+  required:
+    - path
+  additionalProperties: false
