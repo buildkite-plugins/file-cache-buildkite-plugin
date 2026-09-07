@@ -9,7 +9,6 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CACHE_PATH="$(file_cache_path)"
 CACHE_STORE_URL="$(file_cache_store_url)"
 CACHE_ARGS=(--path "$CACHE_PATH")
-DEV_AGENT_BIN_DIR="${BUILDKITE_BUILD_CHECKOUT_PATH:-$PWD}/.buildkite/dev-agent/bin"
 
 if [[ -n "$CACHE_STORE_URL" ]]; then
   CACHE_ARGS+=(--cache-store-url "$CACHE_STORE_URL")
@@ -18,6 +17,4 @@ fi
 printf '%s\n' '--- :package: Restoring file cache'
 printf 'Path: %s\n' "$CACHE_PATH"
 
-# Temporary dogfood override: prefer the agent built by the preceding pipeline job.
-PATH="${DEV_AGENT_BIN_DIR}:${PATH}" \
-  buildkite-agent cache restore "${CACHE_ARGS[@]}"
+buildkite-agent cache restore "${CACHE_ARGS[@]}"
