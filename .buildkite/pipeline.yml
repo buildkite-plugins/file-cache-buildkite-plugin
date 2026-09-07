@@ -11,7 +11,9 @@ steps:
             - lib/**
             - tests/**
           # BATS tests run in subshells; tildes are literal cache path syntax.
-          options: "-x -e SC2030,SC2031,SC2088"
+          options:
+            - --external-sources
+            - --exclude=SC2030,SC2031,SC2088
 
   - label: ":sparkles: Plugin lint"
     plugins:
